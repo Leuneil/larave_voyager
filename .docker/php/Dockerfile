@@ -16,8 +16,8 @@ RUN apt-get install -y libicu-dev \
 
 # gd
 RUN apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev && \
-docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ && \
-docker-php-ext-install gd
+  docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ && \
+  docker-php-ext-install gd
 
 # redis
 RUN pecl install redis && docker-php-ext-enable redis
@@ -30,7 +30,7 @@ RUN pecl install pcov && docker-php-ext-enable pcov
 # && docker-php-ext-enable xdebug \
 # && echo ";zend_extension=xdebug" > /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
-# Insstall exef
+#Install exif
 RUN docker-php-ext-install exif
 
 # Node.js, NPM, Yarn
@@ -54,5 +54,10 @@ RUN composer global require "laravel/installer"
 WORKDIR /root
 RUN git clone https://github.com/seebi/dircolors-solarized
 
+# Adjust permissions for /var/www directory
+RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
+
 EXPOSE 5173
 WORKDIR /var/www
+
+

@@ -26,9 +26,17 @@
 - `docker compose up -d --build`
 - `docker compose exec phpmyadmin chmod 777 /sessions`
 - `docker compose exec php bash`
-- `chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache`
-- `chmod -R 775 /var/www/storage /var/www/bootstrap/cache`
+- `chown -R www-data:www-data /var/www/vendor /var/www/storage /var/www/bootstrap/cache`
+- `chmod -R 775 /var/www/storage /var/www/vendor /var/www/bootstrap/cache`
 - `composer setup`
+- `php artisan voyager:install --with-dummy`
+
+
+# voyager 
+
+### dummy email and pass
+- `admin@admin.com`
+- `password`
 
 ### From the second time onwards
 - `docker compose up -d`
