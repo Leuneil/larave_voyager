@@ -36,6 +36,7 @@ class Column
         if ($options['unsigned']) {
             $columnDefinition->unsigned();
         }
+        
     
         // Apply other modifiers
         $columnDefinition = self::applyModifiers($columnDefinition, $options);
@@ -90,7 +91,7 @@ class Column
 
     protected static function applyModifiers($columnDefinition, $options)
     {
-        if (isset($options['nullable']) && $options['nullable']) {
+        if (isset($options['notnull']) && !$options['notnull']) {
             $columnDefinition->nullable();
         } else {
             $columnDefinition->nullable(false);

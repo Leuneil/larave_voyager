@@ -24,18 +24,59 @@ class Table
         if (!isset($table['name'])) {
             throw new \Exception("Table name is required.");
         }
-
+    
         $name = trim($table['name']);
         $oldName = $table['oldName'] ?? null;
         $name = Identifier::validate($name, 'Table');
-
+    
         $options = $table['options'] ?? [];
         $columns = $table['columns'] ?? [];
-
+    
         if (!Schema::hasTable($oldName)) {
             Schema::create($name, function ($tableBuilder) use ($columns) {
                 foreach ($columns as $column) {
-                    Column::make($column, $tableBuilder, true); // Creating new columns
+                    if (in_array($column['type'], ['decimal', 'float', 'double'])) {
+                        if (isset($column['length']) && strpos($column['length'], ',') !== false) {
+                            $lengthParts = explode(',', $column['length']);
+                            if (count($lengthParts) === 2) {
+                                $precision = (int)trim($lengthParts[0]);
+                                $scale = (int)trim($lengthParts[1]);
+    
+                                // Create the column with precision and scale
+                                $columnBuilder = $tableBuilder->{$column['type']}($column['name'], $precision, $scale);
+    
+                                // Apply the modifiers directly here
+                                if (in_array($column['type'], ['bigint', 'integer', 'tinyint', 'smallint', 'mediumint', 'float', 'double', 'decimal'])) {
+                                    if (isset($column['unsigned']) && $column['unsigned']) {
+                                        $columnBuilder->unsigned();
+                                    }
+                                }
+    
+                                if (isset($column['notnull']) && !$column['notnull']) {
+                                    $columnBuilder->nullable();
+                                } else {
+                                    $columnBuilder->nullable(false);
+                                }
+    
+                                if (isset($column['autoincrement']) && $column['autoincrement']) {
+                                    $columnBuilder->autoIncrement();
+                                }
+    
+                                if (isset($column['default'])) {
+                                    $columnBuilder->default($column['default']);
+                                }
+                            } else {
+                                \Log::error('Invalid length format for decimal type', ['column' => $column]);
+                                continue; // Skip this column if the format is invalid
+                            }
+                        } else {
+                            \Log::error('Missing or invalid length for decimal type', ['column' => $column]);
+                            continue; // Skip this column if the length is invalid
+                        }
+                    } else {
+                        // Handle other types of columns using Column::make
+                        $columnBuilder = Column::make($column, $tableBuilder, true);
+                    }
                 }
             });
         } else {
@@ -44,9 +85,11 @@ class Table
             }
             self::update($table);
         }
-
+    
         return new self($name, $options, $columns);
     }
+    
+    
     
 
     public static function update(array $table)
@@ -113,6 +156,10 @@ class Table
 
                             // Apply additional properties like unsigned, nullable, etc.
                             if (in_array($column['type'], ['bigint', 'integer', 'tinyint', 'smallint', 'mediumint', 'float', 'double', 'decimal'])) {
+                                if ($column['unsigned']) {
+                                    $columnBuilder->unsigned();
+                                }
+                            } else {
                                 if ($column['unsigned']) {
                                     $columnBuilder->unsigned();
                                 }
